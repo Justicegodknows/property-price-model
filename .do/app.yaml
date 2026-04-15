@@ -1,0 +1,17 @@
+name: nigerian-real-estate-api
+
+services:
+  - name: api
+    source_dir: /
+    dockerfile_path: Dockerfile
+    github:
+      branch: main
+      deploy_on_push: true
+    http_port: 8080
+    health_check:
+      http_path: /health
+    instance_count: 1
+    instance_size_slug: basic-s   # 1 vCPU, 1 GB RAM — upgrade if models need more memory
+    envs:
+      - key: PORT
+        value: "8080"

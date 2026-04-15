@@ -170,3 +170,55 @@ Interactive docs: `http://127.0.0.1:8000/docs`
 - **API**: FastAPI, Uvicorn, Pydantic v2
 - **Data**: Pandas, NumPy
 - **Serialization**: Joblib
+
+---
+
+## Deployment (DigitalOcean App Platform)
+
+### 1. Connect your GitHub repo to DigitalOcean
+
+1. Push this repository to GitHub (if not already done)
+2. Go to [DigitalOcean App Platform](https://cloud.digitalocean.com/apps) → **Create App**
+3. Select your GitHub repo and the `main` branch
+4. DO will auto-detect the `Dockerfile` at the project root
+
+### 2. Configure the app
+
+The `.do/app.yaml` file pre-configures the service. Review and adjust `instance_size_slug` if your models need more RAM.
+
+Set the following environment variable in the DO App Platform dashboard (Settings → Environment Variables):
+
+| Variable | Value | Notes |
+|---|---|---|
+| `ALLOW_ORIGINS` | `https://your-vercel-app.vercel.app` | Your Vercel frontend URL |
+| `PORT` | `8080` | Already set in app.yaml |
+
+### 3. Deploy
+
+Push to `main` — App Platform deploys automatically. Once live, your API URL will be:
+```
+https://<app-name>.ondigitalocean.app
+```
+
+Use this as `ML_API_URL` in your Vercel project's environment variables.
+
+---
+
+## Supabase Setup
+
+Run the SQL in `supabase/schema.sql` in your Supabase project's **SQL Editor** to create the `predictions` table with indexes and Row Level Security policies.
+
+---
+
+## Next.js Integration (Vercel)
+
+Add the following environment variables to your Vercel project:
+
+| Variable | Value |
+|---|---|
+| `ML_API_URL` | `https://<app-name>.ondigitalocean.app` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key (server-only) |
+
+In your Next.js Server Action, call `POST ${ML_API_URL}/predict/all` with the user's inputs, then insert the result into the `predictions` Supabase table.

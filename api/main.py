@@ -24,6 +24,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -176,6 +177,17 @@ app = FastAPI(
     title="Nigerian Real Estate Prediction API",
     description="Predict rental cost, property type, and price affordability tier.",
     version="1.0.0",
+)
+
+# Allow requests from your Vercel frontend; tighten ALLOW_ORIGINS in production
+_raw_origins = os.getenv("ALLOW_ORIGINS", "*")
+_origins = [o.strip() for o in _raw_origins.split(",")]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
