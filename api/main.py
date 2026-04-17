@@ -26,9 +26,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
-from database import supabase
-import joblib
-import os
+
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR  = Path(__file__).resolve().parent.parent   # project root
@@ -326,43 +324,3 @@ def _build_clf_row(encoders, req: ClassificationRequest) -> pd.DataFrame:
     }])[CLF_FEATURES]
 
 
-# Load your trained ML model
-model = joblib.load("model.pkl")
-
-class PredictRequest(BaseModel):
-    property_id: str
-    bedrooms: int
-    bathrooms: int
-    size_sqft: float
-    location: str
-
-@app.post("/predict")
-async def predict(request: PredictRequest):
-    try:
-        # 1. Prepare input features
-        features = [[
-            request.bedrooms,
-            request.bathrooms,
-            request.size_sqft,
-        ]]
-
-        # 2. Run the ML model
-        predicted_price = model.predict(features)[0]
-
-        # 3. Save result to Supabase
-        supabase.table("predictions").insert({
-            "property_id": request.property_id,
-            "predicted_price": float(predicted_price),
-        }).execute()
-
-        return {
-            "property_id": request.property_id,
-            "predicted_price": float(predicted_price)
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
